@@ -1,0 +1,37 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allArticles = await getCollection('articles');
+
+// Відфільтровуємо ТІЛЬКИ українські статті (ті, що лежать у папці uk/)
+// і сортуємо їх від новіших до старіших
+const ukArticles = allArticles
+  .filter(article => article.id.startsWith('uk/'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<Layout title="Статті про розробку">
+  <h1>Усі статті</h1>
+  <p>Ділюся досвідом, туторіалами та роздумами про технології.</p>
+
+  <div>
+    {ukArticles.map((article) => (
+      <article>
+        <h2>
+          <a href={`/articles/${article.id}`}>{article.data.title}</a>
+        </h2>
+        
+        <div>
+          Опубліковано: {article.data.pubDate.toLocaleDateString('uk-UA')}
+        </div>
+        
+        <p>{article.data.description}</p>
+        
+        <a href={`/articles/${article.id}`}>
+          Читати далі →
+        </a>
+      </article>
+    ))}
+  </div>
+</Layout>

@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allTerms = await getCollection('terms');
+const sortedTerms = allTerms.sort((a, b) => a.data.title.localeCompare(b.data.title, 'uk'));
+---
+
+<Layout title="Словник термінів">
+  <h1>Словник IT-термінів</h1>
+  <p>Тут зібрані пояснення ключових концепцій та термінів, які ми використовуємо в статтях та курсах.</p>
+  <blockquote>
+    <p>Про терміни не сперечаються, про них домовляються.</p>
+    <cite>Народна мудрість</cite>
+  </blockquote>
+
+  <ul>
+    {sortedTerms.map((term) => (
+      <li>
+        <a href={`/terms/${term.id}`}>
+          {term.data.title}
+        </a>
+        <span> ({term.data.english})</span>
+      </li>
+    ))}
+  </ul>
+</Layout>

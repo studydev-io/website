@@ -1,23 +1,41 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+// Приймаємо проп (параметр) title, щоб заголовок вкладки змінювався
+/* STREAMING_CHUNK: Налаштовуємо отримання пропсів для підтримки Markdown */
+const { title, frontmatter } = Astro.props;
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+// Якщо це .astro файл — беремо title. Якщо .md — беремо frontmatter.title
+const pageTitle = title || frontmatter?.title;
+---
+
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle} | Вчимось розробці разом</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/">Головна</a>
+        <a href="/articles">Статті</a>
+        <a href="/courses">Курси</a>
+        <a href="/terms">Терміни</a>
+        <a href="/about">Про сайт</a>
+      </nav>
+    </header>
+
+    <main>
+      <slot /> 
+    </main>
+
+    <footer>
+      <div>&copy; 2026 studydev.io</div>
+      <nav>
+        <a href="/license">Ліцензія</a>
+        <a href="/hosting">Хостінг</a>
+        <a href="/history">Історія сайту</a>
+        <a href="https://github.com/" target="_blank">Git-репозиторій</a>
+      </nav>
+    </footer>
+  </body>
+</html>

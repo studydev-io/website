@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+// Отримуємо всі записи історії та сортуємо їх від новіших до старіших
+const allHistory = await getCollection('history');
+const sortedHistory = allHistory.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<Layout title="Історія розвитку сайту">
+  <h1>Історія проєкту studydev.io</h1>
+  <p>Ця сторінка — відкритий літопис цього проєкту.</p>
+
+  <div>
+    {sortedHistory.map((entry) => (
+      <div>
+        <h2>
+          <a href={`/history/${entry.id}`}>{entry.data.title}</a>
+        </h2>
+        <small>
+          {entry.data.date.toLocaleDateString('uk-UA')}
+        </small>
+        <p>{entry.data.summary}</p>
+      </div>
+    ))}
+  </div>
+</Layout>

@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const historyEntries = await getCollection('history');
+  return historyEntries.map(entry => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry); 
+---
+
+<Layout title={entry.data.title}>
+  <a href="/history" style="display: inline-block; margin-bottom: 20px;">← Назад до історії</a>
+  
+  <h1>{entry.data.title}</h1>
+  <small style="color: #666;">Опубліковано: {entry.data.date.toLocaleDateString('uk-UA')}</small>
+  
+  <div style="margin-top: 30px;">
+    <Content /> 
+  </div>
+</Layout>

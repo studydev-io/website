@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, getEntry, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const courseFiles = await getCollection('courses');
+  
+  return courseFiles.map(entry => {
+    // Робимо красиві URL: якщо файл index.md, робимо шлях без /index
+    const slug = entry.id.endsWith('/index') 
+      ? entry.id.replace('/index', '') 
+      : entry.id;
+      
+    return {
+      params: { id: slug },
+      props: { entry },
+    };
+  });
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+// === МАГІЯ 1: Генеруємо зміст курсу (якщо це головна сторінка) ===
+let lessons = [];
+if (entry.data.type === 'course_index') {
+  const courseFolderName = entry.id.replace('/index', '');
+  
+  // Шукаємо всі файли в цій же папці, окрім самого index
+  const allLessons = await getCollection('courses', (item) => 
+    item.id.startsWith(courseFolderName + '/') && item.data.type !== 'course_index'
+  );
+  
+  // Сортуємо їх за назвою файлу (наші 01-, 02- зроблять правильний порядок)
+  const sortedLessons = allLessons.sort((a, b) => a.id.localeCompare(b.id));
+  
+  // Оскільки глобальні статті не мають title у файлі курсу, ми підтягуємо його з бази
+  lessons = await Promise.all(sortedLessons.map(async (lesson) => {
+    let title = lesson.data.title;
+    if (lesson.data.type === 'global_article') {
+      const refArticle = await getEntry(lesson.data.articleId);
+      title = refArticle ? refArticle.data.title : "Стаття не знайдена";
+    }
+    return { ...lesson, displayTitle: title };
+  }));
+}
+
+// === МАГІЯ 2: Підтягуємо контент глобальної статті (якщо це урок-посилання) ===
+let GlobalContent;
+let globalArticleData;
+if (entry.data.type === 'global_article') {
+  const globalArticle = await getEntry(entry.data.articleId);
+  if (globalArticle) {
+    globalArticleData = globalArticle.data;
+    const rendered = await render(globalArticle);
+    GlobalContent = rendered.Content;
+  }
+}
+---
+
+<Layout title={entry.data.title || globalArticleData?.title || "Урок"}>
+  
+  <div>
+    <!-- Посилання назад на курс або загальний каталог -->
+    {entry.data.type === 'course_index' 
+      ? <a href="/courses">← Всі курси</a> 
+      : <a href={`/courses/${entry.id.split('/')[0]}`}>← Назад до змісту курсу</a>
+    }
+  </div>
+
+  <article>
+    {/* ВАРІАНТ 1: Головна сторінка курсу */}
+    {entry.data.type === 'course_index' && (
+      <div>
+        <h1>{entry.data.title}</h1>
+        <p>{entry.data.description}</p>
+        <hr/>
+        <Content />
+        
+        <h2>Програма курсу:</h2>
+        <ul>
+          {lessons.map(lesson => (
+            <li>
+              <a href={`/courses/${lesson.id}`}>
+                {lesson.displayTitle}
+              </a>
+              {/* Маленька підказка про тип уроку */}
+              <span>
+                ({lesson.data.type === 'video' ? '📺 Відео' : lesson.data.type === 'global_article' ? '📖 Стаття' : '📝 Урок'})
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    {/* ВАРІАНТ 2: Спеціальний урок курсу */}
+    {entry.data.type === 'course_article' && (
+      <div>
+        <h1>{entry.data.title}</h1>
+        <Content />
+      </div>
+    )}
+
+    {/* ВАРІАНТ 3: Глобальна стаття */}
+    {entry.data.type === 'global_article' && GlobalContent && (
+      <div>
+        <h1>{globalArticleData.title}</h1>
+        <div>
+          ℹ️ Це матеріал із нашого загального розділу статей.
+        </div>
+        <GlobalContent />
+      </div>
+    )}
+
+    {/* ВАРІАНТ 4: Відеоурок */}
+    {entry.data.type === 'video' && (
+      <div>
+        <h1>{entry.data.title}</h1>
+        {entry.data.urls?.youtube && (
+          <div>
+            📺 <strong>Посилання на YouTube:</strong> <a href={entry.data.urls.youtube} target="_blank">{entry.data.urls.youtube}</a>
+            <br/><small>(Пізніше ми замінимо це на повноцінний плеєр)</small>
+          </div>
+        )}
+        <Content />
+      </div>
+    )}
+  </article>
+
+</Layout>

@@ -1,0 +1,58 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  return articles.map(article => ({
+    params: { id: article.id },
+    props: { article },
+  }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+
+// 1. Визначаємо поточну мову
+const isEnglish = article.id.startsWith('en/');
+
+// 2. Формуємо ID для пошуку альтернативної версії
+const altLangId = isEnglish 
+  ? article.id.replace('en/', 'uk/') 
+  : article.id.replace('uk/', 'en/');
+
+// 3. Шукаємо, чи існує файл з таким ID
+const allArticles = await getCollection('articles');
+const altArticle = allArticles.find(a => a.id === altLangId);
+---
+
+<Layout title={article.data.title}>
+  <div style="margin-bottom: 20px;">
+    <a href="/articles">← {isEnglish ? 'Back to Articles' : 'Назад до списку статей'}</a>
+  </div>
+
+  <article>
+    <header>
+      <h1>{article.data.title}</h1>
+      
+      <div>
+        {isEnglish ? 'Published:' : 'Опубліковано:'} {article.data.pubDate.toLocaleDateString(isEnglish ? 'en-US' : 'uk-UA')}
+      </div>
+
+      {/* 4. Виводимо посилання на іншу мову, ТІЛЬКИ якщо файл існує */}
+      {altArticle && (
+        <div>
+          <strong>{isEnglish ? '🌐 Також доступно українською:' : '🌐 Also available in Simple English:'}</strong>
+          <br/>
+          <a href={`/articles/${altArticle.id}`}>
+            {altArticle.data.title}
+          </a>
+        </div>
+      )}
+    </header>
+
+    <div class="article-content">
+      <Content />
+    </div>
+  </article>
+</Layout>

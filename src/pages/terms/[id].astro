@@ -1,0 +1,39 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+// Вказуємо Astro, які сторінки треба створити
+export async function getStaticPaths() {
+  const termsEntries = await getCollection('terms');
+  return termsEntries.map(term => ({
+    params: { id: term.id },
+    props: { term },
+  }));
+}
+
+const { term } = Astro.props;
+// Перетворюємо Markdown на HTML (Синтаксис Astro 5)
+const { Content } = await render(term);
+---
+
+<Layout title={`${term.data.title} - Словник`}>
+  <a href="/terms">← Назад до словника</a>
+  
+  <h1>{term.data.title}</h1>
+  
+  <!-- Виводимо мета-дані з Frontmatter -->
+  <div>
+    <p><strong>Оригінал:</strong> {term.data.english}</p>
+    
+    {/* Перевіряємо, чи є синоніми, і виводимо їх через кому */}
+    {term.data.aliases && term.data.aliases.length > 0 && (
+      <p>
+        <strong>Також відомо як:</strong> {term.data.aliases.join(', ')}
+      </p>
+    )}
+  </div>
+  
+  <div class="term-content">
+    <Content /> 
+  </div>
+</Layout>

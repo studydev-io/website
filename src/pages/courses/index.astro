@@ -1,0 +1,31 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+// Отримуємо всі файли курсів
+const allCourseFiles = await getCollection('courses');
+
+// Фільтруємо ТІЛЬКИ головні сторінки (course_index)
+const courses = allCourseFiles.filter(file => file.data.type === 'course_index');
+---
+
+<Layout title="Всі курси">
+  <h1>Каталог курсів</h1>
+  <p>Безкоштовні та відкриті курси для всіх бажаючих.</p>
+
+  <div>
+    {courses.map((course) => {
+      // Відрізаємо "/index" з ID, щоб посилання було красивим: /courses/test-course
+      const courseUrl = `/courses/${course.id.replace('/index', '')}`;
+      
+      return (
+        <article>
+          <h2>
+            <a href={courseUrl}>{course.data.title}</a>
+          </h2>
+          <p>{course.data.description}</p>
+        </article>
+      );
+    })}
+  </div>
+</Layout>
