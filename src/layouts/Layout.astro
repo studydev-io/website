@@ -1,9 +1,10 @@
 ---
-// Приймаємо проп (параметр) title, щоб заголовок вкладки змінювався
-/* STREAMING_CHUNK: Налаштовуємо отримання пропсів для підтримки Markdown */
+import '../styles/global.scss';
+
+import Logo from '../components/logo.astro';
+
 const { title, frontmatter } = Astro.props;
 
-// Якщо це .astro файл — беремо title. Якщо .md — беремо frontmatter.title
 const pageTitle = title || frontmatter?.title;
 ---
 
@@ -15,13 +16,15 @@ const pageTitle = title || frontmatter?.title;
   </head>
   <body>
     <header>
-      <nav>
+      <Logo />
+      <nav class="main">
         <a href="/">Головна</a>
         <a href="/articles">Статті</a>
         <a href="/courses">Курси</a>
         <a href="/terms">Терміни</a>
         <a href="/about">Про сайт</a>
       </nav>
+      <div></div>
     </header>
 
     <main>
@@ -29,13 +32,74 @@ const pageTitle = title || frontmatter?.title;
     </main>
 
     <footer>
-      <div>&copy; 2026 studydev.io</div>
+      <div class="copy">&copy; 2026 studydev.io</div>
       <nav>
         <a href="/license">Ліцензія</a>
         <a href="/hosting">Хостінг</a>
         <a href="/history">Історія сайту</a>
-        <a href="https://github.com/" target="_blank">Git-репозиторій</a>
+        <a href="https://github.com/studydev-io/website" target="_blank">Git-репозиторій</a>
       </nav>
     </footer>
   </body>
 </html>
+
+<style lang="scss">
+header {
+    position: sticky;
+    top: 0px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 48px;
+    background: var(--surface-overlay);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+
+    nav {
+    display: flex;
+    gap: 36px;
+
+      a {
+        font-family: var(--font-body);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--text-tertiary);
+      }
+    }
+}
+
+footer {
+  flex-grow: 0;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-subtle);
+  padding: 40px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  nav {
+    display: flex;
+    gap: 32px;
+
+    a {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+    }
+  }
+}
+
+main {
+  flex-grow: 1;
+  max-width: 720px;
+  margin: 0px auto;
+  padding: 112px 40px 96px;
+}
+
+.copy {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+</style>

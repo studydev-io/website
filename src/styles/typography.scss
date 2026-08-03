@@ -1,0 +1,50 @@
+:root {
+--text-2xs:.75rem;
+--text-xs:.8125rem;
+--text-sm:.9375rem;
+--text-base:1.0625rem;
+--text-lg:1.1875rem;
+--text-xl:1.375rem;
+--text-2xl:1.75rem;
+--text-3xl:2.25rem;
+--text-4xl:2.875rem;
+--text-5xl:3.5rem;
+--text-6xl:4.25rem;
+
+--leading-tight:1.15;
+--leading-snug:1.35;
+--leading-reading:1.7;
+--leading-relaxed:1.85;
+
+--tracking-tight:-.02em;
+--tracking-normal:0;
+--tracking-wide:.03em;
+--tracking-widest:.09em;
+
+--measure-prose:68ch;
+--measure-narrow:52ch;
+
+--weight-regular:400;
+--weight-medium:500;
+--weight-semibold:600;
+--weight-bold:700;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-family:var(--font-display);
+    font-weight:var(--weight-semibold);
+    letter-spacing:var(--tracking-tight);
+    color:var(--text-primary);
+    line-height:var(--leading-tight);
+}
+
+body {
+    font-family:var(--font-body);
+    font-size:var(--text-base);
+    line-height:var(--leading-reading);
+    color:var(--text-primary);
+}
+
+code,pre,kbd {
+    font-family:var(--font-mono);
+}
