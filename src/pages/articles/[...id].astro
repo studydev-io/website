@@ -24,6 +24,16 @@ const altLangId = isEnglish
 // 3. Шукаємо, чи існує файл з таким ID
 const allArticles = await getCollection('articles');
 const altArticle = allArticles.find(a => a.id === altLangId);
+
+// 5. Шукаємо mp3-файл аудіоверсії статті в тій же теці
+const audioModules = import.meta.glob('/src/content/articles/**/*.mp3', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+const audioSrc = Object.entries(audioModules).find(([path]) =>
+  path.startsWith(`/src/content/articles/${article.id}/`)
+)?.[1] as string | undefined;
 ---
 
 <Layout title={article.data.title}>
@@ -49,8 +59,32 @@ const altArticle = allArticles.find(a => a.id === altLangId);
       )}
     </header>
 
+    {audioSrc && (
+      <div class="article-audio">
+        <strong>{isEnglish ? '🎧 Listen to the audio version:' : '🎧 Аудіоверсія статті:'}</strong>
+        <audio controls src={audioSrc}>
+          {isEnglish ? 'Your browser does not support the audio element.' : 'Ваш браузер не підтримує аудіоелемент.'}
+        </audio>
+      </div>
+    )}
+
     <div class="article-content">
       <Content />
     </div>
   </article>
 </Layout>
+
+<style>
+  .article-audio {
+    margin: 20px 0;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+
+  .article-audio audio {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+  }
+</style>
