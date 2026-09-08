@@ -33,8 +33,6 @@ const altArticle = allArticles.find(a => a.id === altLangId);
 
   <article>
     <header>
-      <h1>{article.data.title}</h1>
-      
       <div>
         {isEnglish ? 'Published:' : 'Опубліковано:'} {article.data.pubDate.toLocaleDateString(isEnglish ? 'en-US' : 'uk-UA')}
       </div>
