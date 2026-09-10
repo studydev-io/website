@@ -13,17 +13,39 @@ export async function getStaticPaths() {
 const { article } = Astro.props;
 const { Content } = await render(article);
 
-// 1. Визначаємо поточну мову
-const isEnglish = article.id.startsWith('en/');
+// 1. Розбираємо ID на слаг статті та піддиректорію перекладу.
+//    Базова стаття (українська) лежить прямо в теці слага: id = "<slug>".
+//    Переклад лежить у вкладеній теці: id = "<slug>/<lang>-<level>",
+//    напр. "3-how-to-learn-programming/en-a2".
+const [slug, variant] = article.id.split('/');
+const isTranslation = Boolean(variant);
+const isEnglish = isTranslation;
 
-// 2. Формуємо ID для пошуку альтернативної версії
-const altLangId = isEnglish 
-  ? article.id.replace('en/', 'uk/') 
-  : article.id.replace('uk/', 'en/');
-
-// 3. Шукаємо, чи існує файл з таким ID
 const allArticles = await getCollection('articles');
-const altArticle = allArticles.find(a => a.id === altLangId);
+
+// 2. Базова (українська) стаття — для перекладу шукаємо оригінал за слагом
+const baseArticle = isTranslation
+  ? allArticles.find(a => a.id === slug)
+  : article;
+
+// 3. Усі перекладені версії цієї статті (можуть бути різних мовних рівнів)
+const translations = allArticles
+  .filter(a => a.id.startsWith(`${slug}/`))
+  .sort((a, b) => a.id.localeCompare(b.id));
+const otherTranslations = translations.filter(t => t.id !== article.id);
+
+// 4. Людяна назва варіанту перекладу за кодом "<lang>-<level>"
+const VARIANT_LABELS: Record<string, string> = {
+  'en-a1': 'Simple English (A1)',
+  'en-a2': 'Simple English (A2)',
+  'en-b1': 'Intermediate English (B1)',
+  'en-b2': 'Upper-Intermediate English (B2)',
+  'en-c1': 'Advanced English (C1)',
+  'en-c2': 'Advanced English (C2)',
+};
+function formatVariantLabel(variantId: string) {
+  return VARIANT_LABELS[variantId] ?? variantId.toUpperCase();
+}
 
 // 5. Шукаємо mp3-файл аудіоверсії статті в тій же теці
 const audioModules = import.meta.glob('/src/content/articles/**/*.mp3', {
@@ -31,9 +53,12 @@ const audioModules = import.meta.glob('/src/content/articles/**/*.mp3', {
   query: '?url',
   import: 'default',
 });
-const audioSrc = Object.entries(audioModules).find(([path]) =>
-  path.startsWith(`/src/content/articles/${article.id}/`)
-)?.[1] as string | undefined;
+const articleDir = `/src/content/articles/${article.id}/`;
+const audioSrc = Object.entries(audioModules).find(([path]) => {
+  if (!path.startsWith(articleDir)) return false;
+  // Файл має лежати саме в цій теці, а не в теці вкладеного перекладу
+  return !path.slice(articleDir.length).includes('/');
+})?.[1] as string | undefined;
 ---
 
 <Layout title={article.data.title}>
@@ -47,14 +72,42 @@ const audioSrc = Object.entries(audioModules).find(([path]) =>
         {isEnglish ? 'Published:' : 'Опубліковано:'} {article.data.pubDate.toLocaleDateString(isEnglish ? 'en-US' : 'uk-UA')}
       </div>
 
-      {/* 4. Виводимо посилання на іншу мову, ТІЛЬКИ якщо файл існує */}
-      {altArticle && (
+      {/* 4. Для перекладу — посилання на український оригінал */}
+      {isTranslation && baseArticle && (
         <div>
-          <strong>{isEnglish ? '🌐 Також доступно українською:' : '🌐 Also available in Simple English:'}</strong>
+          <strong>🌐 Оригінал українською:</strong>
           <br/>
-          <a href={`/articles/${altArticle.id}`}>
-            {altArticle.data.title}
+          <a href={`/articles/${baseArticle.id}`}>
+            {baseArticle.data.title}
           </a>
+        </div>
+      )}
+
+      {/* Для базової статті — список усіх наявних перекладів (можуть бути різних рівнів) */}
+      {!isTranslation && translations.length > 0 && (
+        <div>
+          <strong>🌐 Also available in translations:</strong>
+          <ul>
+            {translations.map(t => (
+              <li>
+                <a href={`/articles/${t.id}`}>{t.data.title}</a> ({formatVariantLabel(t.id.split('/')[1])})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Для перекладу — посилання на інші рівні/варіанти перекладу цієї ж статті */}
+      {isTranslation && otherTranslations.length > 0 && (
+        <div>
+          <strong>Other levels:</strong>
+          <ul>
+            {otherTranslations.map(t => (
+              <li>
+                <a href={`/articles/${t.id}`}>{t.data.title}</a> ({formatVariantLabel(t.id.split('/')[1])})
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </header>

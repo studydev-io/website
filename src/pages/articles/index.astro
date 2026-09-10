@@ -4,10 +4,11 @@ import { getCollection } from 'astro:content';
 
 const allArticles = await getCollection('articles');
 
-// Відфільтровуємо ТІЛЬКИ українські статті (ті, що лежать у папці uk/)
+// Відфільтровуємо ТІЛЬКИ базові українські статті (ті, що лежать
+// безпосередньо в теці статті, без мовного піддиректорію перекладу)
 // і сортуємо їх від новіших до старіших
 const ukArticles = allArticles
-  .filter(article => article.id.startsWith('uk/'))
+  .filter(article => !article.id.includes('/'))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
